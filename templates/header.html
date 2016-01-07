@@ -1,0 +1,39 @@
+{{ define "header.html" }}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>{{.title}} : Lunchmoney</title>
+
+        <link rel="stylesheet" href="/public/css/bootstrap.min.css">
+
+        <link rel="stylesheet" href="/public/plugins/font-awesome/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="/public/css/app.css">
+
+        <script src="/public/js/jquery-2.1.3.min.js"></script>
+    </head>
+<body>
+
+<div class="container-fluid">
+<div class="row">
+    <div class="col-md-10 col-md-offset-1 col-sm-12">
+        <a class="navbar-brand" href="/">
+          <span class="glyphicon glyphicon-user glyphicon-scissors"></span>
+          Lunchmoney
+        </a>
+    </div>
+</div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-1 col-sm-12 side-menu-container">
+        {{template "sidemenu.html" .}}
+        </div>
+        <div class="col-md-10 col-sm-12 content">
+            <h1>{{.title}}</h1>
+{{end}}
