@@ -5,9 +5,18 @@
      <span class="fa-bars"></span>
    </button>
 </div>
-<ul class="nav" id="side-menu">
+<ul class="nav nav-pills" id="side-menu">
     <li>
         <a href="/" class="active"><i class="fa fa-home fa-fw"></i> Home</a>
     </li>
+
+    {{ range $acc := .Accounts }}
+    <li>
+        <a href="/accounts/{{ $acc.ID }}" class="active"><i class="fa fa-{{ $acc.Icon }} fa-fw"></i> {{ $acc.Name }} <br />
+        <span class="total"><i class="fa fa-fw"></i>[ {{ $acc.CurrencySymbolLeft }} {{ $acc.GetTotal }} {{ $acc.CurrencySymbolRight }} {{ $acc.Currency }} ]</span>
+
+        </a>
+    </li>
+    {{ end }}
 </ul>
 {{ end }}

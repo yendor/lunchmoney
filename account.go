@@ -1,13 +1,16 @@
 package main
 
 type Account struct {
-	ID           int
-	Name         string
-	Currency     string
-	IsActive     bool
-	Transactions []Transaction
-	clearedTotal int
-	total        int
+	ID                  string
+	Name                string
+	Currency            string
+	CurrencySymbolLeft  string
+	CurrencySymbolRight string
+	Icon                string
+	IsActive            bool
+	Transactions        []Transaction
+	clearedTotal        int
+	total               int
 }
 
 func (a *Account) GetClearedTotal() int {
@@ -16,13 +19,6 @@ func (a *Account) GetClearedTotal() int {
 
 func (a *Account) GetTotal() int {
 	return a.total
-}
-
-func (a *Account) GetList() []Account {
-	var ret []Account
-	newAccount := Account{ID: 1, Name: "Savings", Currency: "AUD", IsActive: true}
-	ret = append(ret, newAccount)
-	return ret
 }
 
 func (a *Account) GetTransactions() []Transaction {

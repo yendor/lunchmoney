@@ -1,0 +1,38 @@
+{{template "header.html" .}}
+
+{{ with $acc := .Account }}
+
+<h3>Account #{{ $acc.ID }}</h3>
+
+<div class="totals">
+    <div class="total">
+        Total: {{ $acc.CurrencySymbolLeft }} {{ $acc.GetTotal }} {{ $acc.CurrencySymbolRight }} {{ $acc.Currency }}
+    </div>
+    <div class="total-cleared">
+        Cleared Total:  {{ $acc.CurrencySymbolLeft }} {{ $acc.GetClearedTotal }} {{ $acc.CurrencySymbolRight }} {{ $acc.Currency }}
+    </div>
+</div>
+
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+    <th>Payee</th>
+    <th>Memo</th>
+    <th>Debit</th>
+    <th>Credit</th>
+</tr>
+</thead>
+<tbody>
+{{ range $acc.Transactions }}
+    <tr>
+        <td>{{ .Payee }}</td>
+        <td>{{ .Memo }}</td>
+        <td class="text-right">{{ .Debit }}</td>
+        <td class="text-right">{{ .Credit }}</td>
+    </tr>
+{{ end }}
+</tbody>
+</table>
+{{ end }}
+
+{{template "footer.html" .}}
