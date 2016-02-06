@@ -1,4 +1,4 @@
 # lunchmoney
 A budget manager written in go
 
-https://travis-ci.org/yendor/lunchmoney.svg?branch=master
+![Build Status](https://travis-ci.org/yendor/lunchmoney.svg?branch=master)
