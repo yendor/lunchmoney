@@ -1,0 +1,5 @@
+development:
+    driver: sqlite3
+    open: lunchmoney.db
+    dialect: sqlite3
+    import: github.com/mattn/go-sqlite3
