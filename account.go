@@ -1,7 +1,7 @@
 package main
 
 type Account struct {
-	ID                  string
+	ID                  int64
 	Name                string
 	Currency            string
 	CurrencySymbolLeft  string
@@ -9,15 +9,15 @@ type Account struct {
 	Icon                string
 	IsActive            bool
 	Transactions        []Transaction
-	clearedTotal        int
-	total               int
+	clearedTotal        int64
+	total               int64
 }
 
-func (a *Account) GetClearedTotal() int {
+func (a *Account) GetClearedTotal() int64 {
 	return a.clearedTotal
 }
 
-func (a *Account) GetTotal() int {
+func (a *Account) GetTotal() int64 {
 	return a.total
 }
 

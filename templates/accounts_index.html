@@ -13,9 +13,10 @@
     </div>
 </div>
 
-<table class="table table-striped table-bordered">
+<table class="table table-striped table-bordered editable-table">
 <thead>
 <tr>
+    <th>ID</th>
     <th>Payee</th>
     <th>Memo</th>
     <th>Debit</th>
@@ -25,6 +26,7 @@
 <tbody>
 {{ range $acc.Transactions }}
     <tr>
+        <td>{{ .ID }}</td>
         <td>{{ .Payee }}</td>
         <td>{{ .Memo }}</td>
         <td class="text-right">{{ .Debit }}</td>
@@ -33,6 +35,49 @@
 {{ end }}
 </tbody>
 </table>
-{{ end }}
 
+
+<script type="text/javascript" src="/public/plugins/jquery-tabledit/jquery.tabledit.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.editable-table').Tabledit({
+            url: '/accounts/{{ $acc.ID }}',
+            hideIdentifier: true,
+            editButton: true,
+            restoreButton: false,
+            deleteButton: false,
+            columns: {
+                identifier: [0, 'ID'],
+                editable: [[1, 'Payee'], [2, 'Memo'], [3, 'Debit'], [4, 'Credit']]
+            },
+            buttons: {
+                edit: {
+                    class: 'btn btn-sm btn-primary',
+                    html: '<span class="glyphicon glyphicon-pencil"></span> &nbsp EDIT',
+                    action: 'edit'
+                },
+                delete: {
+                    class: 'btn btn-sm btn-danger',
+                    html: '<span class="glyphicon glyphicon-remove"></span> &nbsp DELETE',
+                    action: 'delete'
+                },
+                confirm: {
+                    class: 'btn btn-sm btn-default',
+                    html: '<span class="glyphicon glyphicon-ok"></span> &nbsp Are you Sure ?',
+                },
+                save: {
+                    class: 'btn btn-sm btn-success',
+                    html: '<span class="glyphicon glyphicon-floppy-disk"></span> &nbsp SAVE'
+                },
+                restore: {
+                    class: 'btn btn-sm btn-warning',
+                    html: '<span class="glyphicon glyphicon-repeat"></span> &nbsp RESTORE',
+                    action: 'delete'
+                },
+            }
+        });
+    });
+</script>
+{{ end }}
 {{template "footer.html" .}}
