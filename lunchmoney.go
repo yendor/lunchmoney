@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -10,17 +11,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const DebitCreditPrecision int = 2
+const DebitCreditPrecision int32 = 2
 
 var templates *template.Template
 
-var accounts []Account
+var accounts map[int64]*Account
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
 
 	type PageData struct {
 		Title    string
-		Accounts []Account
+		Accounts map[int64]*Account
 	}
 
 	pageData := &PageData{Title: "Home", Accounts: accounts}
@@ -38,7 +39,7 @@ func AccountList(w http.ResponseWriter, r *http.Request) {
 		Title     string
 		AccountId string
 		Account   Account
-		Accounts  []Account
+		Accounts  map[int64]*Account
 	}
 
 	acc_id, err := strconv.ParseInt(vars["accountId"], 10, 64)
@@ -49,12 +50,17 @@ func AccountList(w http.ResponseWriter, r *http.Request) {
 	var account Account
 	for _, acc := range accounts {
 		if acc.ID == acc_id {
-			account = acc
+			account = *acc
 			break
 		}
 	}
 
-	pageData := &PageData{Title: "Accounts", AccountId: vars["accountId"], Account: account, Accounts: accounts}
+	pageData := &PageData{
+		Title:     "Accounts",
+		AccountId: vars["accountId"],
+		Account:   account,
+		Accounts:  accounts,
+	}
 
 	err = templates.ExecuteTemplate(w, "accounts_index.html", pageData)
 	if err != nil {
@@ -80,7 +86,7 @@ func AccountsUpdater(w http.ResponseWriter, r *http.Request) {
 	var account Account
 	for _, acc := range accounts {
 		if acc.ID == acc_id {
-			account = acc
+			account = *acc
 			break
 		}
 	}
@@ -122,13 +128,35 @@ func AccountsUpdater(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func AccountsImporter(w http.ResponseWriter, r *http.Request) {
+	acc_id, err := strconv.ParseInt(r.FormValue("account_id"), 10, 64)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	file, _, err := r.FormFile("upload_file")
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	accounts[acc_id].ImportTransactions(file)
+	log.Println(accounts[acc_id].Transactions)
+
+	http.Redirect(w, r, fmt.Sprintf("/accounts/%d", acc_id), 302)
+}
+
 func main() {
+
 	r := mux.NewRouter()
 	// Routes consist of a path and a handler function.
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("./public/"))))
 	r.HandleFunc("/", YourHandler)
 	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountList).Methods("GET")
 	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountsUpdater).Methods("POST")
+	r.HandleFunc("/accounts/import", AccountsImporter).Methods("POST")
 
 	var err error
 	// var doc []byte
@@ -137,6 +165,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	accounts = make(map[int64]*Account)
 
 	loadData()
 
@@ -147,11 +177,12 @@ func main() {
 }
 
 func loadData() {
-	acc1 := Account{
+	acc1 := &Account{
 		ID:                 1,
 		Name:               "Savings",
 		CurrencySymbolLeft: "$",
-		Currency:           "AUD",
+		CurrencyCode:       "AUD",
+		DecimalPlaces:      DebitCreditPrecision,
 		IsActive:           true,
 		Icon:               "dollar",
 	}
@@ -165,13 +196,16 @@ func loadData() {
 	}
 	acc1.AddTransaction(trans)
 
-	acc2 := Account{
+	acc2 := &Account{
 		ID:                 2,
 		Name:               "Credit Card",
-		Currency:           "AUD",
+		CurrencyCode:       "AUD",
 		CurrencySymbolLeft: "$",
+		DecimalPlaces:      DebitCreditPrecision,
 		IsActive:           true,
 		Icon:               "credit-card",
 	}
-	accounts = append(accounts, acc1, acc2)
+
+	accounts[1] = acc1
+	accounts[2] = acc2
 }
