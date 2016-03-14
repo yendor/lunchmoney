@@ -6,10 +6,10 @@
 
 <div class="totals row">
     <div class="total col-md-2">
-        Total: {{ $acc.CurrencySymbolLeft }} {{ $acc.GetTotal }} {{ $acc.CurrencySymbolRight }} {{ $acc.CurrencyCode }}
+        Total: {{ $acc.GetFormattedTotal }} {{ $acc.CurrencyCode }}
     </div>
     <div class="total-cleared col-md-2">
-        Cleared Total:  {{ $acc.CurrencySymbolLeft }} {{ $acc.GetClearedTotal }} {{ $acc.CurrencySymbolRight }} {{ $acc.CurrencyCode }}
+        Cleared Total:  {{ $acc.GetFormattedClearedTotal }} {{ $acc.CurrencyCode }}
     </div>
 </div>
 
@@ -26,7 +26,6 @@
         </div>
     </form>
 </div>
-
 
 <div class="row">
     <div class="col-md-12">
@@ -46,8 +45,8 @@
                 <td>{{ .ID }}</td>
                 <td>{{ .Payee }}</td>
                 <td>{{ .Memo }}</td>
-                <td class="text-right">{{ .Debit }}</td>
-                <td class="text-right">{{ .Credit }}</td>
+                <td class="text-right">{{ $acc.GetFormattedAmount .Debit }}</td>
+                <td class="text-right">{{ $acc.GetFormattedAmount .Credit }}</td>
             </tr>
         {{ end }}
         </tbody>

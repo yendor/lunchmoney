@@ -29,6 +29,18 @@ func (a *Account) GetTotal() int64 {
 	return a.total
 }
 
+func (a *Account) GetFormattedTotal() string {
+	return currencyToStr(a.total, a)
+}
+
+func (a *Account) GetFormattedAmount(amount int64) string {
+	return currencyToStr(amount, a)
+}
+
+func (a *Account) GetFormattedClearedTotal() string {
+	return currencyToStr(a.clearedTotal, a)
+}
+
 func (a *Account) GetTransactions() []Transaction {
 	return a.Transactions
 }

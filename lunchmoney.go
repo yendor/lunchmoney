@@ -2,35 +2,75 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/captncraig/temple"
 	"github.com/gorilla/mux"
 )
 
 const DebitCreditPrecision int32 = 2
 
-var templates *template.Template
+var devMode = flag.Bool("dev", false, "activate dev mode for templates")
+var templateManager temple.TemplateStore
 
 var accounts map[int64]*Account
+
+func main() {
+	setupConfig()
+	setupTemplates()
+
+	// Routing
+	r := mux.NewRouter()
+	// Routes consist of a path and a handler function.
+	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("./public/"))))
+	r.HandleFunc("/", YourHandler)
+	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountList).Methods("GET")
+	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountsUpdater).Methods("POST")
+	r.HandleFunc("/accounts/import", AccountsImporter).Methods("POST")
+
+	// Data
+	accounts = make(map[int64]*Account)
+	loadData()
+
+	// Bind to a port and pass our router in
+	listen := ":8000"
+	log.Printf("Starting server on %s\n", listen)
+	log.Printf("Template auto reloading: %t\n", *devMode)
+	http.ListenAndServe(listen, r)
+}
+
+func setupConfig() {
+	flag.Parse()
+}
+
+func setupTemplates() {
+	var err error
+
+	// Templates
+	templateManager, err = temple.New(*devMode, templates, "templates")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
 
 	type PageData struct {
-		Title    string
-		Accounts map[int64]*Account
+		Title     string
+		Accounts  map[int64]*Account
+		AccountId string
 	}
 
 	pageData := &PageData{Title: "Home", Accounts: accounts}
 
-	err := templates.ExecuteTemplate(w, "index.html", pageData)
+	err := templateManager.Execute(w, pageData, "index.html")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
-	// w.Write(doc)
 }
 
 func AccountList(w http.ResponseWriter, r *http.Request) {
@@ -62,9 +102,9 @@ func AccountList(w http.ResponseWriter, r *http.Request) {
 		Accounts:  accounts,
 	}
 
-	err = templates.ExecuteTemplate(w, "accounts_index.html", pageData)
+	err = templateManager.Execute(w, pageData, "accounts_index.html")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -83,16 +123,8 @@ func AccountsUpdater(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account Account
-	for _, acc := range accounts {
-		if acc.ID == acc_id {
-			account = *acc
-			break
-		}
-	}
-
 	var transaction Transaction
-	for _, trans := range account.Transactions {
+	for _, trans := range accounts[acc_id].Transactions {
 		if trans.ID == trans_id {
 			transaction = trans
 		}
@@ -100,22 +132,14 @@ func AccountsUpdater(w http.ResponseWriter, r *http.Request) {
 
 	transaction.Payee = r.PostFormValue("Payee")
 	transaction.Memo = r.PostFormValue("Memo")
-	debit, err := strconv.ParseInt(r.PostFormValue("Debit"), 10, 64)
-	if err != nil {
-		log.Printf("Invalid Debit %v\n", err)
-	} else {
-		transaction.Debit = debit
-	}
-	credit, err := strconv.ParseInt(r.PostFormValue("Credit"), 10, 64)
-	if err != nil {
-		log.Printf("Invalid Credit %v\n", err)
-	} else {
-		transaction.Credit = credit
-	}
+	debit := currencyToInt(r.PostFormValue("Debit"), accounts[acc_id])
+	transaction.Debit = debit
+	credit := currencyToInt(r.PostFormValue("Credit"), accounts[acc_id])
+	transaction.Credit = credit
 
-	for trans_key, trans := range account.Transactions {
+	for trans_key, trans := range accounts[acc_id].Transactions {
 		if trans.ID == trans_id {
-			account.Transactions[trans_key] = transaction
+			accounts[acc_id].Transactions[trans_key] = transaction
 			w.Header().Set("Content-Type", "text/json")
 
 			jsonResponse, err := json.Marshal(transaction)
@@ -146,34 +170,6 @@ func AccountsImporter(w http.ResponseWriter, r *http.Request) {
 	log.Println(accounts[acc_id].Transactions)
 
 	http.Redirect(w, r, fmt.Sprintf("/accounts/%d", acc_id), 302)
-}
-
-func main() {
-
-	r := mux.NewRouter()
-	// Routes consist of a path and a handler function.
-	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("./public/"))))
-	r.HandleFunc("/", YourHandler)
-	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountList).Methods("GET")
-	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountsUpdater).Methods("POST")
-	r.HandleFunc("/accounts/import", AccountsImporter).Methods("POST")
-
-	var err error
-	// var doc []byte
-	templates, err = template.ParseGlob("templates/*.html")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	accounts = make(map[int64]*Account)
-
-	loadData()
-
-	// Bind to a port and pass our router in
-	listen := ":8000"
-	log.Printf("Starting server on %s\n", listen)
-	http.ListenAndServe(listen, r)
 }
 
 func loadData() {
