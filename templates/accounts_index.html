@@ -8,7 +8,7 @@
     <div class="total col-md-2">
         Total: {{ $acc.GetFormattedTotal }} {{ $acc.CurrencyCode }}
     </div>
-    <div class="total-cleared col-md-2">
+    <div class="total-cleared col-md-3">
         Cleared Total:  {{ $acc.GetFormattedClearedTotal }} {{ $acc.CurrencyCode }}
     </div>
 </div>
@@ -39,6 +39,15 @@
             <th>Credit</th>
         </tr>
         </thead>
+        <tfoot>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        </tfoot>
         <tbody>
         {{ range $acc.Transactions }}
             <tr>

@@ -3,3 +3,6 @@
 # lunchmoney
 A budget manager written in go
 
+# Migrations
+goose up
+

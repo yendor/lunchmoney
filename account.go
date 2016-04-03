@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/csv"
 	"io"
 	"log"
@@ -53,6 +54,24 @@ func (a *Account) AddTransaction(t Transaction) {
 	if t.IsCleared {
 		a.clearedTotal += t.Credit
 		a.clearedTotal -= t.Debit
+	}
+}
+
+func (a *Account) Create(db *sql.DB) {
+	query := `INSERT INTO accounts (name, currency_code, currency_symbol_left, currency_symbol_right, decimal_places, icon, is_active, cleared_total, total) values (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		log.Printf("Error preparing query: %s\n", err)
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(a.Name, a.CurrencyCode, a.CurrencySymbolLeft, a.CurrencySymbolRight, a.DecimalPlaces, a.Icon, a.IsActive, a.GetClearedTotal(), a.GetTotal())
+	if err != nil {
+		log.Printf("Error: %s\n", err)
+	}
+	a.ID, err = result.LastInsertId()
+	if err != nil {
+		log.Printf("Error: %s\n", err)
 	}
 }
 
