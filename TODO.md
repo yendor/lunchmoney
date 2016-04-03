@@ -1,7 +1,7 @@
-Main features
+TODO
 --------------
+* Persist transactions to the database
 * manually add transactions
-* import transactions
+
+
 * match imported transactions to manually added transactions
-* manage budget categories
-*
