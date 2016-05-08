@@ -1,0 +1,24 @@
+{{template "header.html" .}}
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Stock Code</th>
+<th>Qty</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+
+{{ range .Shares }}
+
+<tr>
+    <td>{{ .Code }}</td>
+    <td align="right">{{ .Qty }}</td>
+    <td align="right">{{ .Value }}</td>
+</tr>
+
+{{ end }}
+</tbody>
+</table>
+
+{{template "footer.html" .}}

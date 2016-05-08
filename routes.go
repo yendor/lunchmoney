@@ -16,6 +16,7 @@ func setupRouting() *mux.Router {
 	// Routes consist of a path and a handler function.
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("./public/"))))
 	r.HandleFunc("/", YourHandler)
+	r.HandleFunc("/shares", Shares)
 	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountList).Methods("GET")
 	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountsUpdater).Methods("POST")
 	r.HandleFunc("/accounts/import", AccountsImporter).Methods("POST")
@@ -35,6 +36,25 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 	pageData := &PageData{Title: "Home", Accounts: accounts}
 
 	err := templateManager.Execute(w, pageData, "index.html")
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func Shares(w http.ResponseWriter, r *http.Request) {
+	type PageData struct {
+		Title    string
+		Shares   map[string]*Share
+		Accounts map[int64]*Account
+	}
+
+	pageData := &PageData{
+		Title:    "Shares",
+		Shares:   shares,
+		Accounts: accounts,
+	}
+	w.Header().Set("Content-Type", "text/html")
+	err = templateManager.Execute(w, pageData, "shares_index.html")
 	if err != nil {
 		log.Println(err)
 	}

@@ -18,12 +18,15 @@ var templateManager temple.TemplateStore
 
 var accounts map[int64]*Account
 
+var shares map[string]*Share
+
 var db *sql.DB
 var err error
 
 func main() {
 	// Data
 	accounts = make(map[int64]*Account)
+	shares = make(map[string]*Share)
 
 	setupConfig()
 	setupTemplates()
@@ -133,6 +136,34 @@ func loadData() {
 		log.Printf("%s\n", err)
 		return
 	}
+
+	query = `SELECT stockcode, qty FROM shares`
+
+	var stockcode string
+	var qty int64
+
+	rows, err = db.Query(query)
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(
+			&stockcode,
+			&qty,
+		)
+		if err != nil {
+			log.Printf("%s\n", err)
+			return
+		}
+
+		share := &Share{
+			Code: stockcode,
+			Qty:  qty,
+		}
+		share.GetValue()
+		log.Println(share)
+
+		shares[stockcode] = share
+	}
+
 }
 
 func createAccounts() {
