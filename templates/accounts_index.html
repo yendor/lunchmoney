@@ -33,6 +33,7 @@
         <thead>
         <tr>
             <th>ID</th>
+            <th>Date</th>
             <th>Payee</th>
             <th>Memo</th>
             <th>Debit</th>
@@ -52,6 +53,7 @@
         {{ range $acc.Transactions }}
             <tr>
                 <td>{{ .ID }}</td>
+                <td>{{ .Date }}</td>
                 <td>{{ .Payee }}</td>
                 <td>{{ .Memo }}</td>
                 <td class="text-right">{{ $acc.GetFormattedAmount .Debit }}</td>
