@@ -1,0 +1,40 @@
+
+{{template "header.html" .}}
+
+<div class="row">
+    <div class="col-md-12">
+        <table class="table table-striped table-bordered editable-table">
+        <thead>
+        <tr>
+            <th>Day</th>
+            <th>Balance</th>
+            <th>Interest</th>
+            <th>Day Interest</th>
+            <th>Running Interest</th>
+        </tr>
+        </thead>
+        <tfoot>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        </tfoot>
+        <tbody>
+        {{ range .Interest }}
+            <tr>
+                <td>{{ .Day }}</td>
+                <td>{{ .Balance }}</td>
+                <td>{{ .InterestRate }}</td>
+                <td>{{ .DaysInterest }}</td>
+                <td>{{ .RunningInterest }}</td>
+            </tr>
+        {{ end }}
+        </tbody>
+        </table>
+    </div>
+</div>
+
+{{template "footer.html" .}}

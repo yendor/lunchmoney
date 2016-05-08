@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -16,6 +17,7 @@ func setupRouting() *mux.Router {
 	// Routes consist of a path and a handler function.
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("./public/"))))
 	r.HandleFunc("/", YourHandler)
+	r.HandleFunc("/interest", InterestList)
 	r.HandleFunc("/shares", Shares)
 	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountList).Methods("GET")
 	r.HandleFunc("/accounts/{accountId:[0-9]+}", AccountsUpdater).Methods("POST")
@@ -36,6 +38,42 @@ func YourHandler(w http.ResponseWriter, r *http.Request) {
 	pageData := &PageData{Title: "Home", Accounts: accounts}
 
 	err := templateManager.Execute(w, pageData, "index.html")
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func InterestList(w http.ResponseWriter, r *http.Request) {
+	// vars := mux.Vars(r)
+
+	w.Header().Set("Content-Type", "text/html")
+
+	type PageData struct {
+		Title    string
+		Accounts map[int64]*Account
+		Interest []LoanInterest
+	}
+
+	layout := "2006-01-02"
+	var fromStr, untilStr string
+
+	fromStr = r.URL.Query().Get("from")
+
+	untilStr = r.URL.Query().Get("until")
+
+	from, _ := time.Parse(layout, fromStr)
+
+	until, _ := time.Parse(layout, untilStr)
+
+	interest, _ := DailyInterest(from, until)
+
+	pageData := &PageData{
+		Title:    "Interest",
+		Accounts: accounts,
+		Interest: interest,
+	}
+
+	err := templateManager.Execute(w, pageData, "interest.html")
 	if err != nil {
 		log.Println(err)
 	}
