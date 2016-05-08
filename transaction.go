@@ -7,8 +7,8 @@ type Transaction struct {
 	Date         time.Time
 	Payee        string
 	Memo         string
-	Debit        int64
-	Credit       int64
+	Debit        float64
+	Credit       float64
 	CategoryID   int64
 	AccountID    int64
 	IsCleared    bool

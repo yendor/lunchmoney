@@ -91,7 +91,8 @@ func loadData() {
 		total
 	FROM accounts`
 
-	var id, cleared_total, total int64
+	var id int64
+	var cleared_total, total float64
 	var decimal_places int32
 	var name, currency_code, currency_symbol_left, currency_symbol_right, icon string
 	var is_active bool
@@ -128,8 +129,9 @@ func loadData() {
 			clearedTotal:        cleared_total,
 			total:               total,
 		}
-		log.Printf("%v\n", acc)
 
+		acc.LoadTransactions()
+		log.Printf("%v\n", acc)
 		accounts[acc.ID] = acc
 	}
 	err = rows.Err()

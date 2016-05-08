@@ -18,15 +18,15 @@ type Account struct {
 	Icon                string
 	IsActive            bool
 	Transactions        []Transaction
-	clearedTotal        int64
-	total               int64
+	clearedTotal        float64
+	total               float64
 }
 
-func (a *Account) GetClearedTotal() int64 {
+func (a *Account) GetClearedTotal() float64 {
 	return a.clearedTotal
 }
 
-func (a *Account) GetTotal() int64 {
+func (a *Account) GetTotal() float64 {
 	return a.total
 }
 
@@ -34,12 +34,75 @@ func (a *Account) GetFormattedTotal() string {
 	return currencyToStr(a.total, a)
 }
 
-func (a *Account) GetFormattedAmount(amount int64) string {
+func (a *Account) GetFormattedAmount(amount float64) string {
 	return currencyToStr(amount, a)
 }
 
 func (a *Account) GetFormattedClearedTotal() string {
 	return currencyToStr(a.clearedTotal, a)
+}
+
+func (a *Account) LoadTransactions() {
+	// log.Printf("Loading transactions for account id %d\n", a.ID)
+
+	query := `SELECT id, occurred, payee, memo, debit, credit
+	FROM transactions
+	WHERE account_id = $1`
+
+	var id int64
+	var credit, debit float64
+	var payee, memoStr string
+	var memo sql.NullString
+	var occurred time.Time
+
+	rows, err := db.Query(query, a.ID)
+	if err != nil {
+		log.Printf("QUERY ERROR: %s\n", err)
+		return
+	}
+	defer rows.Close()
+
+	if memo.Valid {
+		memoStr = memo.String
+	} else {
+		memoStr = ""
+	}
+
+	for rows.Next() {
+		err := rows.Scan(
+			&id,
+			&occurred,
+			&payee,
+			&memo,
+			&debit,
+			&credit,
+		)
+		if err != nil {
+			log.Printf("%s\n", err)
+			return
+		}
+
+		t := &Transaction{
+			ID:        id,
+			Date:      occurred,
+			Payee:     payee,
+			Memo:      memoStr,
+			Debit:     debit,
+			Credit:    credit,
+			AccountID: a.ID,
+		}
+
+		a.total += t.Credit
+		a.total -= t.Debit
+
+		if t.IsCleared {
+			a.clearedTotal += t.Credit
+			a.clearedTotal -= t.Debit
+		}
+
+		a.Transactions = append(a.Transactions, *t)
+	}
+
 }
 
 func (a *Account) GetTransactions() []Transaction {
