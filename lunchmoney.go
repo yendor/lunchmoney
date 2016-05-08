@@ -24,6 +24,7 @@ var db *sql.DB
 var err error
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
 	// Data
 	accounts = make(map[int64]*Account)
 	shares = make(map[string]*Share)
