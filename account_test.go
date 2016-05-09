@@ -4,7 +4,7 @@ import "testing"
 
 func TestTransactions(t *testing.T) {
 
-	a := &Account{IsActive: true, Currency: "AUD"}
+	a := &Account{IsActive: true, CurrencyCode: "AUD"}
 
 	trans := Transaction{Credit: 10, Debit: 0, IsCleared: true}
 
