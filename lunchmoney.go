@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -24,6 +25,8 @@ var netWorth decimal.Decimal
 var db *sql.DB
 var err error
 
+var configfile string
+
 var cfg Config
 
 type Config struct {
@@ -33,11 +36,23 @@ type Config struct {
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	flag.Parse()
+	configfile = flag.Arg(0)
+	if configfile == "" {
+		configfile = "lunchmoney.json"
+	}
+
+	file, _ := os.Open(configfile)
+	decoder := json.NewDecoder(file)
+	err := decoder.Decode(&cfg)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
 	// Data
 	accounts = make(map[int64]*Account)
 	shares = make(map[string]*Share)
-
-	parseConfig()
 
 	setupDB()
 
@@ -49,15 +64,6 @@ func main() {
 	listen := cfg.Listen
 	log.Printf("Starting server on %s\n", listen)
 	r.Run(listen)
-}
-
-func parseConfig() {
-	file, _ := os.Open("lunchmoney.json")
-	decoder := json.NewDecoder(file)
-	err := decoder.Decode(&cfg)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
 }
 
 func setupDB() {
