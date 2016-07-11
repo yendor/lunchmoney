@@ -2,7 +2,10 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type LoanInterest struct {
@@ -11,6 +14,31 @@ type LoanInterest struct {
 	InterestRate    float64
 	DaysInterest    float64
 	RunningInterest float64
+}
+
+func InterestList(c *gin.Context) {
+	// vars := mux.Vars(r)
+
+	layout := "2006-01-02"
+	var fromStr, untilStr string
+
+	fromStr = c.Query("from")
+
+	untilStr = c.Query("until")
+
+	from, _ := time.Parse(layout, fromStr)
+
+	until, _ := time.Parse(layout, untilStr)
+
+	interest, _ := DailyInterest(from, until)
+
+	c.HTML(http.StatusOK, "interest.html", gin.H{
+		"Title":    "Interest",
+		"Accounts": &accounts,
+		"Shares":   &shares,
+		"Interest": interest,
+		"NetWorth": netWorth,
+	})
 }
 
 func DailyInterest(from, until time.Time) ([]LoanInterest, error) {

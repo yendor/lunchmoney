@@ -3,9 +3,15 @@ package main
 import (
 	"database/sql"
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
+	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 )
 
 type Account struct {
@@ -18,28 +24,74 @@ type Account struct {
 	Icon                string
 	IsActive            bool
 	Transactions        []Transaction
-	clearedTotal        float64
-	total               float64
+	clearedTotal        decimal.Decimal
+	Total               decimal.Decimal
 }
 
-func (a *Account) GetClearedTotal() float64 {
+func AccountList(c *gin.Context) {
+	acc_id, err := strconv.ParseInt(c.Param("accountId"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var account Account
+	for _, acc := range accounts {
+		if acc.ID == acc_id {
+			account = *acc
+			break
+		}
+	}
+
+	log.Printf("%v\n", account.GetTotal())
+
+	c.HTML(http.StatusOK, "accounts_index.html", gin.H{
+		"Title":     "Accounts",
+		"AccountId": acc_id,
+		"Account":   &account,
+		"Accounts":  &accounts,
+		"Shares":    &shares,
+		"NetWorth":  netWorth,
+	})
+}
+
+func AccountsImporter(c *gin.Context) {
+	acc_id, err := strconv.ParseInt(c.PostForm("account_id"), 10, 64)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	file, _, err := c.Request.FormFile("upload_file")
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	accounts[acc_id].ImportTransactions(file)
+	// log.Println(accounts[acc_id].Transactions)
+
+	c.Redirect(http.StatusFound, fmt.Sprintf("/accounts/%d", acc_id))
+}
+
+func (a *Account) GetClearedTotal() decimal.Decimal {
 	return a.clearedTotal
 }
 
-func (a *Account) GetTotal() float64 {
-	return a.total
+func (a *Account) GetTotal() decimal.Decimal {
+	return a.Total
 }
 
 func (a *Account) GetFormattedTotal() string {
-	return currencyToStr(a.total, a)
+	return a.Total.StringFixed(a.DecimalPlaces)
 }
 
-func (a *Account) GetFormattedAmount(amount float64) string {
-	return currencyToStr(amount, a)
+func (a *Account) GetFormattedAmount(amount decimal.Decimal) string {
+	return amount.StringFixed(a.DecimalPlaces)
 }
 
 func (a *Account) GetFormattedClearedTotal() string {
-	return currencyToStr(a.clearedTotal, a)
+	return a.clearedTotal.StringFixed(a.DecimalPlaces)
 }
 
 func (a *Account) LoadTransactions() {
@@ -50,7 +102,7 @@ func (a *Account) LoadTransactions() {
 	WHERE account_id = $1`
 
 	var id int64
-	var credit, debit float64
+	var credit, debit decimal.Decimal
 	var payee, memoStr string
 	var memo sql.NullString
 	var occurred time.Time
@@ -92,12 +144,12 @@ func (a *Account) LoadTransactions() {
 			AccountID: a.ID,
 		}
 
-		a.total += t.Credit
-		a.total -= t.Debit
+		a.Total = a.Total.Add(credit)
+		a.Total = a.Total.Sub(debit)
 
 		if t.IsCleared {
-			a.clearedTotal += t.Credit
-			a.clearedTotal -= t.Debit
+			a.clearedTotal = a.clearedTotal.Add(credit)
+			a.clearedTotal = a.clearedTotal.Sub(debit)
 		}
 
 		a.Transactions = append(a.Transactions, *t)
@@ -111,12 +163,13 @@ func (a *Account) GetTransactions() []Transaction {
 
 func (a *Account) AddTransaction(t Transaction) {
 	a.Transactions = append(a.Transactions, t)
-	a.total += t.Credit
-	a.total -= t.Debit
+
+	a.Total = a.Total.Add(t.Credit)
+	a.Total = a.Total.Sub(t.Debit)
 
 	if t.IsCleared {
-		a.clearedTotal += t.Credit
-		a.clearedTotal -= t.Debit
+		a.clearedTotal = a.clearedTotal.Add(t.Credit)
+		a.clearedTotal = a.clearedTotal.Sub(t.Debit)
 	}
 }
 
@@ -128,7 +181,17 @@ func (a *Account) Create(db *sql.DB) {
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(a.Name, a.CurrencyCode, a.CurrencySymbolLeft, a.CurrencySymbolRight, a.DecimalPlaces, a.Icon, a.IsActive, a.GetClearedTotal(), a.GetTotal())
+	result, err := stmt.Exec(
+		a.Name,
+		a.CurrencyCode,
+		a.CurrencySymbolLeft,
+		a.CurrencySymbolRight,
+		a.DecimalPlaces,
+		a.Icon,
+		a.IsActive,
+		a.GetClearedTotal(),
+		a.GetTotal(),
+	)
 	if err != nil {
 		log.Printf("Error: %s\n", err)
 	}
@@ -154,30 +217,29 @@ func (a *Account) ImportTransactions(r io.Reader) {
 			continue
 		}
 
-		transDate, err := time.Parse("02/01/2006", record[3])
+		transDate, err := time.Parse("02/01/2006", record[1])
 		if err != nil {
 			log.Println(err)
 		}
 
-		cleared := false
+		cleared := true
 		reconciled := false
 
-		if record[11] == "R" {
-			cleared = true
-			reconciled = true
-		} else if record[11] == "C" {
-			cleared = true
+		credit, err := decimal.NewFromString(record[4])
+		if err != nil {
+			log.Print(err)
 		}
-
-		credit := currencyToInt(record[10], a)
-		debit := currencyToInt(record[9], a)
+		debit, err := decimal.NewFromString(record[3])
+		if err != nil {
+			log.Print(err)
+		}
 
 		trans := Transaction{
 			Credit:       credit,
 			Debit:        debit,
 			IsCleared:    cleared,
 			IsReconciled: reconciled,
-			Payee:        record[4],
+			Payee:        record[2],
 			Date:         transDate,
 		}
 		a.AddTransaction(trans)

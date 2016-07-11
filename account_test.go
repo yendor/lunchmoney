@@ -1,39 +1,55 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/shopspring/decimal"
+)
 
 func TestTransactions(t *testing.T) {
 
 	a := &Account{IsActive: true, CurrencyCode: "AUD"}
 
-	trans := Transaction{Credit: 10, Debit: 0, IsCleared: true}
+	credit10, _ := decimal.NewFromString("10.0")
+	debit, _ := decimal.NewFromString("0.0")
+
+	trans := Transaction{
+		Credit:    credit10,
+		Debit:     debit,
+		IsCleared: true,
+	}
 
 	a.AddTransaction(trans)
 
-	if a.GetTotal() != 10 {
-		t.Fail()
+	total := a.GetTotal()
+
+	if total != credit10 {
+		t.Errorf("Total not right, expected %v got %v", credit10, a.GetTotal())
 	}
-	if a.GetClearedTotal() != 10 {
-		t.Fail()
+	if a.GetClearedTotal() != credit10 {
+		t.Error("Cleared Total not right")
 	}
 
-	trans.Credit = 0
-	trans.Debit = 5
+	credit, _ := decimal.NewFromString("0.0")
+	debit, _ = decimal.NewFromString("5.0")
+
+	trans.Credit = credit
+	trans.Debit = debit
 	trans.IsCleared = false
 	a.AddTransaction(trans)
 
-	if a.GetTotal() != 5 {
-		t.Fail()
+	if a.GetTotal() != debit {
+		t.Error("Total not right")
 	}
 
-	if a.GetClearedTotal() != 10 {
-		t.Fail()
+	if a.GetClearedTotal() != credit10 {
+		t.Error("Cleared total not right")
 	}
 
 	tr := a.GetTransactions()
 
 	if len(tr) != 2 {
-		t.Fail()
+		t.Error("Number of transactions not right")
 	}
 	// log.Printf("%v\n", tr)
 }

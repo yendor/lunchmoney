@@ -1,14 +1,18 @@
 package main
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 type Transaction struct {
 	ID           int64
 	Date         time.Time
 	Payee        string
 	Memo         string
-	Debit        float64
-	Credit       float64
+	Debit        decimal.Decimal
+	Credit       decimal.Decimal
 	CategoryID   int64
 	AccountID    int64
 	IsCleared    bool

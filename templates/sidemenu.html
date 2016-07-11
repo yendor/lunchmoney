@@ -1,13 +1,34 @@
 {{ define "sidemenu.html" }}
-
 <table class="table">
 <thead>
 </thead>
+
 <tbody>
 <tr>
-    <td><a href="/"><i class="fa fa-home fa-fw"></i>Home</a></td>
+    <td><a href="/"><i class="fa fa-home fa-fw"></i> Home</a></td>
     <td></td>
 </tr>
+<tr>
+    <td><a href="/budget"><i class="fa fa-heartbeat fa-fw"></i> Budget</a></td>
+    <td></td>
+</tr>
+<!-- <tr> -->
+<!--     <td><a href="/reports"><i class="fa fa-bar-chart fa-fw"></i> Reports</a></td> -->
+<!--     <td></td> -->
+<!-- </tr> -->
+<tr>
+    <td><a href="/interest?from=2016-05-28&amp;until=2016-06-27"><i class="fa fa-line-chart fa-fw"></i> Interest</a></td>
+    <td></td>
+</tr>
+{{ range $s := .Shares }}
+<tr>
+    <td><a href="/shares"><i class="fa fa-pie-chart fa-fw"></i> Shares : {{ $s.Code }}</a></td>
+    <td class="text-right">
+        <span class="total">{{ $s.Value.StringFixed 2 }}</span>
+    </td>
+</tr>
+{{ end }}
+
 {{ range $a := .Accounts }}
 
 <tr>
@@ -16,17 +37,19 @@
     </td>
     <td class="text-right">
     <a href="/accounts/{{ $a.ID }}" class="active">
-    <span class="total"><i class="fa fa-fw"></i>{{ $a.GetFormattedTotal }}</span>
+    <span class="total"><i class="fa fa-fw"></i>{{ $a.Total.StringFixed 2 }}</span>
     </a>
     </td>
 </tr>
+
 {{ end }}
-<tr>
-    <td><a href="/interest?from=2016-03-28&amp;until=2016-04-27">Interest</a></td>
-</tr>
-<tr>
-    <td><a href="/shares">Shares</a></td>
-</tr>
+
 </tbody>
+<tfoot>
+<tr>
+    <td>Net Worth</td>
+    <td class="text-right">{{ .NetWorth.StringFixed 2 }}</td>
+</tr>
+</tfoot>
 </table>
 {{ end }}

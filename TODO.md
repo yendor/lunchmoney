@@ -1,6 +1,5 @@
 TODO
 --------------
-* Persist transactions to the database
 * manually add transactions
 
 
