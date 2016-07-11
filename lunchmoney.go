@@ -2,8 +2,10 @@ package main
 
 import (
 	"database/sql"
-	"flag"
+	"encoding/json"
+	"fmt"
 	"log"
+	"os"
 
 	//_ "github.com/mattn/go-sqlite3"
 
@@ -22,13 +24,20 @@ var netWorth decimal.Decimal
 var db *sql.DB
 var err error
 
+var cfg Config
+
+type Config struct {
+	Listen string
+	DSN    string
+}
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 	// Data
 	accounts = make(map[int64]*Account)
 	shares = make(map[string]*Share)
 
-	setupConfig()
+	parseConfig()
 
 	setupDB()
 
@@ -37,14 +46,23 @@ func main() {
 	r := setupRouting()
 
 	// Bind to a port and pass our router in
-	listen := ":8000"
+	listen := cfg.Listen
 	log.Printf("Starting server on %s\n", listen)
 	r.Run(listen)
 }
 
+func parseConfig() {
+	file, _ := os.Open("lunchmoney.json")
+	decoder := json.NewDecoder(file)
+	err := decoder.Decode(&cfg)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+}
+
 func setupDB() {
 	// db, err = sql.Open("sqlite3", "./lunchmoney.db")
-	db, err = sql.Open("postgres", "")
+	db, err = sql.Open("postgres", cfg.DSN)
 	if err != nil {
 		log.Printf("Error connect to the db: %s\n", err)
 	}
@@ -53,10 +71,6 @@ func setupDB() {
 	if err != nil {
 		log.Fatal("Error connecting to the db: %s\n", err)
 	}
-}
-
-func setupConfig() {
-	flag.Parse()
 }
 
 func loadData() {
