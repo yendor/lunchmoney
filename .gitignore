@@ -3,4 +3,5 @@ lunchmoney
 lunchmoney.sublime-project
 lunchmoney.sublime-workspace
 lunchmoney.db
+lunchmoney.json
 testdata/*
