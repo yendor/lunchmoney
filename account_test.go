@@ -23,10 +23,10 @@ func TestTransactions(t *testing.T) {
 
 	total := a.GetTotal()
 
-	if total != credit10 {
+	if total.String() != credit10.String() {
 		t.Errorf("Total not right, expected %v got %v", credit10, a.GetTotal())
 	}
-	if a.GetClearedTotal() != credit10 {
+	if a.GetClearedTotal().String() != credit10.String() {
 		t.Error("Cleared Total not right")
 	}
 
@@ -38,11 +38,11 @@ func TestTransactions(t *testing.T) {
 	trans.IsCleared = false
 	a.AddTransaction(trans)
 
-	if a.GetTotal() != debit {
+	if a.GetTotal().String() != debit.String() {
 		t.Error("Total not right")
 	}
 
-	if a.GetClearedTotal() != credit10 {
+	if a.GetClearedTotal().String() != credit10.String() {
 		t.Error("Cleared total not right")
 	}
 
