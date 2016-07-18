@@ -14,7 +14,7 @@
 </div>
 
 <div class="actions">
-    <form action="/accounts/import" method="POST" enctype="multipart/form-data">
+    <form action="/import" method="POST" enctype="multipart/form-data">
         <div class="row">
             <div class="col-md-6">
                 <input type="hidden" name="account_id" value="{{ $acc.ID }}" />
@@ -40,15 +40,6 @@
             <th>Credit</th>
         </tr>
         </thead>
-        <tfoot>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        </tfoot>
         <tbody>
         {{ range $acc.Transactions }}
             <tr>
@@ -60,6 +51,14 @@
                 <td class="text-right">{{ $acc.GetFormattedAmount .Credit }}</td>
             </tr>
         {{ end }}
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
         </tbody>
         </table>
     </div>
@@ -77,7 +76,7 @@
             deleteButton: false,
             columns: {
                 identifier: [0, 'ID'],
-                editable: [[1, 'Payee'], [2, 'Memo'], [3, 'Debit'], [4, 'Credit']]
+                editable: [[2, 'Payee'], [3, 'Memo'], [4, 'Debit'], [5, 'Credit']]
             },
             buttons: {
                 edit: {

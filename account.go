@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -42,8 +43,6 @@ func AccountList(c *gin.Context) {
 		}
 	}
 
-	log.Printf("%v\n", account.GetTotal())
-
 	c.HTML(http.StatusOK, "accounts_index.html", gin.H{
 		"Title":     "Accounts",
 		"AccountId": acc_id,
@@ -52,6 +51,62 @@ func AccountList(c *gin.Context) {
 		"Shares":    &shares,
 		"NetWorth":  netWorth,
 	})
+}
+
+func AccountsUpdater(c *gin.Context) {
+	acc_id, err := strconv.ParseInt(c.Param("accountId"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	trans_id, err := strconv.ParseInt(c.PostForm("ID"), 10, 64)
+	if err != nil {
+		log.Printf("Invalid ID: %v - %v\n", trans_id, err)
+		return
+	}
+
+	var account *Account
+	for _, acc := range accounts {
+		if acc.ID == acc_id {
+			account = acc
+			break
+		}
+	}
+
+	var transaction Transaction
+	for _, trans := range account.Transactions {
+		if trans.ID == trans_id {
+			transaction = trans
+		}
+	}
+
+	transaction.Payee = c.PostForm("Payee")
+	transaction.Memo = c.PostForm("Memo")
+	debit, err := decimal.NewFromString(c.PostForm("Debit"))
+	if err != nil {
+		log.Printf("Invalid Debit %v\n", err)
+	} else {
+		transaction.Debit = debit
+	}
+	credit, err := decimal.NewFromString(c.PostForm("Credit"))
+	if err != nil {
+		log.Printf("Invalid Credit %v\n", err)
+	} else {
+		transaction.Credit = credit
+	}
+
+	for trans_key, trans := range account.Transactions {
+		if trans.ID == trans_id {
+			account.Transactions[trans_key] = transaction
+
+			jsonResponse, err := json.Marshal(transaction)
+			if err != nil {
+				log.Printf("Json marshaling error: %v\n", err)
+				return
+			}
+			c.JSON(http.StatusOK, jsonResponse)
+		}
+	}
 }
 
 func AccountsImporter(c *gin.Context) {

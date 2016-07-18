@@ -23,8 +23,8 @@ func setupRouting() *gin.Engine {
 	r.GET("/shares", SharesHandler)
 	r.GET("/budget", BudgetHandler)
 	r.GET("/accounts/:accountId", AccountList)
-	// r.POST("/accounts/{accountId:[0-9]+}", AccountsUpdater)
-	r.POST("/accounts/import", AccountsImporter)
+	r.POST("/accounts/:accountId", AccountsUpdater)
+	r.POST("/import", AccountsImporter)
 	return r
 }
 
