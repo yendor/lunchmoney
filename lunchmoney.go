@@ -40,7 +40,7 @@ func main() {
 	flag.Parse()
 	configfile = flag.Arg(0)
 	if configfile == "" {
-		configfile = "lunchmoney.json"
+		configfile = "config.json"
 	}
 
 	file, _ := os.Open(configfile)
