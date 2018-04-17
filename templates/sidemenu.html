@@ -17,7 +17,7 @@
 <!--     <td></td> -->
 <!-- </tr> -->
 <tr>
-    <td><a href="/interest?from=2016-05-28&amp;until=2016-06-27"><i class="fa fa-line-chart fa-fw"></i> Interest</a></td>
+    <td><a href="/interest?from=2016-05-28&amp;until=2016-06-27"><i class="fa fa-bank fa-fw"></i> Interest</a></td>
     <td></td>
 </tr>
 {{ range $s := .Shares }}
@@ -26,6 +26,10 @@
     <td class="text-right">
         <span class="total">{{ $s.Value.StringFixed 2 }}</span>
     </td>
+</tr>
+{{ else }}
+<tr>
+    <td colspan="2"><a href=""><i class="fa fa-line-chart fa-fw"></i> Add Shares</a></td>
 </tr>
 {{ end }}
 
@@ -41,13 +45,16 @@
     </a>
     </td>
 </tr>
-
+{{ else }}
+<tr>
+    <td colspan="2"><a href=""><i class="fa fa-book fa-fw"></i> Add Account</a></td>
+</tr>
 {{ end }}
 
 </tbody>
 <tfoot>
 <tr>
-    <td>Net Worth</td>
+    <td><a href=""><i class="fa fa-shopping-cart fa-fw"></i> Net Worth</a></td>
     <td class="text-right">{{ .NetWorth.StringFixed 2 }}</td>
 </tr>
 </tfoot>
