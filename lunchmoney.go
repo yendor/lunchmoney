@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
-	//_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 
-	_ "github.com/lib/pq"
 	"github.com/shopspring/decimal"
 )
 
@@ -67,16 +67,22 @@ func main() {
 }
 
 func setupDB() {
+	parts := strings.Split(cfg.DSN, "://")
+	driver := parts[0]
+	dsn := parts[1]
+
 	// db, err = sql.Open("sqlite3", "./lunchmoney.db")
-	db, err = sql.Open("postgres", cfg.DSN)
+	db, err = sql.Open(driver, dsn)
 	if err != nil {
-		log.Printf("Error connect to the db: %s\n", err)
+		log.Fatalf("Error connecting to the db using driver %s at %s: %s", driver, dsn, err)
 	}
 
+	// if driver != "sqlite3" {
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("Error connecting to the db: %s\n", err)
+		log.Fatalf("Error connecting to the db using driver %s at %s: %s", driver, dsn, err)
 	}
+	// }
 }
 
 func loadData() {
@@ -101,6 +107,10 @@ func loadData() {
 
 	rows, err := db.Query(query)
 	defer rows.Close()
+	if err != nil {
+		log.Fatalf("Unable to load data: %s", err)
+	}
+
 	for rows.Next() {
 		err := rows.Scan(
 			&id,
@@ -151,6 +161,10 @@ func loadData() {
 
 	rows, err = db.Query(query)
 	defer rows.Close()
+	if err != nil {
+		log.Fatalf("Unable to do query: %s", err)
+	}
+
 	for rows.Next() {
 		err := rows.Scan(
 			&stockcode,
