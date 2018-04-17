@@ -1,6 +1,7 @@
 .PHONY: migrateup clean
 
 lunchmoney: *.go
+	go get 
 	go build
 
 clean: 
