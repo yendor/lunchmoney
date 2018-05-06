@@ -6,6 +6,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// Transaction is a record of a transaction
 type Transaction struct {
 	ID           int64
 	Date         time.Time

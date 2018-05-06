@@ -15,6 +15,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// Account that has all the transactions in it
 type Account struct {
 	ID                  int64
 	Name                string
@@ -29,15 +30,16 @@ type Account struct {
 	Total               decimal.Decimal
 }
 
+// AccountList displays a list of accounts
 func AccountList(c *gin.Context) {
-	acc_id, err := strconv.ParseInt(c.Param("accountId"), 10, 64)
+	accID, err := strconv.ParseInt(c.Param("accountId"), 10, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var account Account
 	for _, acc := range accounts {
-		if acc.ID == acc_id {
+		if acc.ID == accID {
 			account = *acc
 			break
 		}
@@ -45,7 +47,7 @@ func AccountList(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "accounts_index.html", gin.H{
 		"Title":     "Accounts",
-		"AccountId": acc_id,
+		"AccountId": accID,
 		"Account":   &account,
 		"Accounts":  &accounts,
 		"Shares":    &shares,
@@ -53,21 +55,22 @@ func AccountList(c *gin.Context) {
 	})
 }
 
+// AccountsUpdater updates the transactions in an account
 func AccountsUpdater(c *gin.Context) {
-	acc_id, err := strconv.ParseInt(c.Param("accountId"), 10, 64)
+	accID, err := strconv.ParseInt(c.Param("accountId"), 10, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	trans_id, err := strconv.ParseInt(c.PostForm("ID"), 10, 64)
+	transID, err := strconv.ParseInt(c.PostForm("ID"), 10, 64)
 	if err != nil {
-		log.Printf("Invalid ID: %v - %v\n", trans_id, err)
+		log.Printf("Invalid ID: %v - %v\n", transID, err)
 		return
 	}
 
 	var account *Account
 	for _, acc := range accounts {
-		if acc.ID == acc_id {
+		if acc.ID == accID {
 			account = acc
 			break
 		}
@@ -75,7 +78,7 @@ func AccountsUpdater(c *gin.Context) {
 
 	var transaction Transaction
 	for _, trans := range account.Transactions {
-		if trans.ID == trans_id {
+		if trans.ID == transID {
 			transaction = trans
 		}
 	}
@@ -95,9 +98,9 @@ func AccountsUpdater(c *gin.Context) {
 		transaction.Credit = credit
 	}
 
-	for trans_key, trans := range account.Transactions {
-		if trans.ID == trans_id {
-			account.Transactions[trans_key] = transaction
+	for transKey, trans := range account.Transactions {
+		if trans.ID == transID {
+			account.Transactions[transKey] = transaction
 
 			jsonResponse, err := json.Marshal(transaction)
 			if err != nil {
@@ -109,8 +112,9 @@ func AccountsUpdater(c *gin.Context) {
 	}
 }
 
+// AccountsImporter imports a bunch of transactions into an account
 func AccountsImporter(c *gin.Context) {
-	acc_id, err := strconv.ParseInt(c.PostForm("account_id"), 10, 64)
+	accID, err := strconv.ParseInt(c.PostForm("account_id"), 10, 64)
 
 	if err != nil {
 		log.Println(err)
@@ -123,32 +127,38 @@ func AccountsImporter(c *gin.Context) {
 		log.Println(err)
 	}
 
-	accounts[acc_id].ImportTransactions(file)
+	accounts[accID].ImportTransactions(file)
 	// log.Println(accounts[acc_id].Transactions)
 
-	c.Redirect(http.StatusFound, fmt.Sprintf("/accounts/%d", acc_id))
+	c.Redirect(http.StatusFound, fmt.Sprintf("/accounts/%d", accID))
 }
 
+// GetClearedTotal gets the total of the cleared transactions
 func (a *Account) GetClearedTotal() decimal.Decimal {
 	return a.clearedTotal
 }
 
+// GetTotal gets the total of all the transactions
 func (a *Account) GetTotal() decimal.Decimal {
 	return a.Total
 }
 
+// GetFormattedTotal gets the total as a string
 func (a *Account) GetFormattedTotal() string {
 	return a.Total.StringFixed(a.DecimalPlaces)
 }
 
+// GetFormattedAmount Formats an amount as string
 func (a *Account) GetFormattedAmount(amount decimal.Decimal) string {
 	return amount.StringFixed(a.DecimalPlaces)
 }
 
+// GetFormattedClearedTotal get the cleared total as formatted string
 func (a *Account) GetFormattedClearedTotal() string {
 	return a.clearedTotal.StringFixed(a.DecimalPlaces)
 }
 
+// LoadTransactions load the transactions from the db
 func (a *Account) LoadTransactions() {
 	// log.Printf("Loading transactions for account id %d\n", a.ID)
 
@@ -212,10 +222,12 @@ func (a *Account) LoadTransactions() {
 
 }
 
+// GetTransactions get the transaction list
 func (a *Account) GetTransactions() []Transaction {
 	return a.Transactions
 }
 
+// AddTransaction add a transaction to an account
 func (a *Account) AddTransaction(t Transaction) {
 	a.Transactions = append(a.Transactions, t)
 
@@ -228,6 +240,7 @@ func (a *Account) AddTransaction(t Transaction) {
 	}
 }
 
+// Create creates a new account
 func (a *Account) Create(db *sql.DB) {
 	query := `INSERT INTO accounts (name, currency_code, currency_symbol_left, currency_symbol_right, decimal_places, icon, is_active, cleared_total, total) values (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	stmt, err := db.Prepare(query)
@@ -256,6 +269,7 @@ func (a *Account) Create(db *sql.DB) {
 	}
 }
 
+// ImportTransactions import transactions from a csv file into an account
 func (a *Account) ImportTransactions(r io.Reader) {
 
 	csvr := csv.NewReader(r)

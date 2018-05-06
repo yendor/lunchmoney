@@ -28,6 +28,7 @@ func setupRouting() *gin.Engine {
 	return r
 }
 
+// HomepageHandler is the http handler for the homepage
 func HomepageHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"Title":    "Home",

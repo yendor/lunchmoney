@@ -14,6 +14,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// DebitCreditPrecision is the number of decimal places to display
 const DebitCreditPrecision int32 = 2
 
 var accounts map[int64]*Account
@@ -29,6 +30,7 @@ var configfile string
 
 var cfg Config
 
+// Config is the config for the lunchmoney app
 type Config struct {
 	Listen string
 	DSN    string
@@ -100,10 +102,10 @@ func loadData() {
 	FROM accounts`
 
 	var id int64
-	var cleared_total, total decimal.Decimal
-	var decimal_places int32
-	var name, currency_code, currency_symbol_left, currency_symbol_right, icon string
-	var is_active bool
+	var clearedTotal, total decimal.Decimal
+	var decimalPlaces int32
+	var name, currencyCode, currencySymbolLeft, currencySymbolRight, icon string
+	var isActive bool
 
 	rows, err := db.Query(query)
 	defer rows.Close()
@@ -115,13 +117,13 @@ func loadData() {
 		err := rows.Scan(
 			&id,
 			&name,
-			&currency_code,
-			&currency_symbol_left,
-			&currency_symbol_right,
-			&decimal_places,
+			&currencyCode,
+			&currencySymbolLeft,
+			&currencySymbolRight,
+			&decimalPlaces,
 			&icon,
-			&is_active,
-			&cleared_total,
+			&isActive,
+			&clearedTotal,
 			&total,
 		)
 		if err != nil {
@@ -132,13 +134,13 @@ func loadData() {
 		acc := &Account{
 			ID:                  id,
 			Name:                name,
-			CurrencyCode:        currency_code,
-			CurrencySymbolLeft:  currency_symbol_left,
-			CurrencySymbolRight: currency_symbol_right,
-			DecimalPlaces:       decimal_places,
+			CurrencyCode:        currencyCode,
+			CurrencySymbolLeft:  currencySymbolLeft,
+			CurrencySymbolRight: currencySymbolRight,
+			DecimalPlaces:       decimalPlaces,
 			Icon:                icon,
-			IsActive:            is_active,
-			clearedTotal:        cleared_total,
+			IsActive:            isActive,
+			clearedTotal:        clearedTotal,
 			Total:               total,
 		}
 

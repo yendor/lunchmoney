@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// LoanInterest is a single calculated point of interest
 type LoanInterest struct {
 	Day             time.Time
 	Balance         float64
@@ -16,6 +17,7 @@ type LoanInterest struct {
 	RunningInterest float64
 }
 
+// InterestList is the http handler for showing the interest
 func InterestList(c *gin.Context) {
 	// vars := mux.Vars(r)
 
@@ -41,9 +43,10 @@ func InterestList(c *gin.Context) {
 	})
 }
 
+// DailyInterest calcualted the daily interest acuumulation between from and until
 func DailyInterest(from, until time.Time) ([]LoanInterest, error) {
-	loanAccountId := 2
-	offsetAccountId := 1
+	loanAccountID := 2
+	offsetAccountID := 1
 
 	query := `SELECT principal.day, principal.balance, rates.interest_rate, round(principal.balance * ( rates.interest_rate / 100 / 365 ), 2) as days_interest,
     SUM(round(principal.balance * ( rates.interest_rate /100 / 365 ), 2)) OVER (ORDER BY principal.day)
@@ -92,16 +95,16 @@ func DailyInterest(from, until time.Time) ([]LoanInterest, error) {
 
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		return nil, err
 	}
 
 	var day time.Time
-	var balance, interest_rate, days_interest, running_interest float64
+	var balance, interestRate, daysInterest, runningInterest float64
 
 	var returnLines []LoanInterest
 
-	rows, err := stmt.Query(loanAccountId, offsetAccountId, from, until)
+	rows, err := stmt.Query(loanAccountID, offsetAccountID, from, until)
 	if err != nil {
 		log.Printf("%s\n", err)
 		return nil, err
@@ -112,9 +115,9 @@ func DailyInterest(from, until time.Time) ([]LoanInterest, error) {
 		err := rows.Scan(
 			&day,
 			&balance,
-			&interest_rate,
-			&days_interest,
-			&running_interest,
+			&interestRate,
+			&daysInterest,
+			&runningInterest,
 		)
 		if err != nil {
 			log.Printf("%s\n", err)
@@ -133,9 +136,9 @@ func DailyInterest(from, until time.Time) ([]LoanInterest, error) {
 		l := &LoanInterest{
 			Day:             day,
 			Balance:         balance,
-			InterestRate:    interest_rate,
-			DaysInterest:    days_interest,
-			RunningInterest: running_interest,
+			InterestRate:    interestRate,
+			DaysInterest:    daysInterest,
+			RunningInterest: runningInterest,
 		}
 
 		returnLines = append(returnLines, *l)
